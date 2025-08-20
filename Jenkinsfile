@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_REPO = "fizza424/final-devops-project"   // change to your Docker Hub repo
+        DOCKER_HUB_REPO = "fizza424/dockerhub_repo:latest"   // change to your Docker Hub repo
         AWS_REGION = "ap-south-1"                           // change if different
         EC2_USER = "ec2-user"
         EC2_HOST = "13.235.78.253"                          // your EC2 public IP
@@ -73,6 +73,7 @@ pipeline {
         }
     }
 }
+
 
 
 
