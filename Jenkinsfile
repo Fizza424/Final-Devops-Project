@@ -45,7 +45,7 @@ pipeline {
                         "docker pull %DOCKER_HUB_REPO%:latest && ^
                         docker stop app || true && ^
                         docker rm app || true && ^
-                        docker run -d --name app -p 80:80 %DOCKER_HUB_REPO%:latest"
+                        docker run -d --name app -p 5000:5000 %DOCKER_HUB_REPO%:latest"
                     """
                 }
             }
@@ -72,6 +72,7 @@ pipeline {
         }
     }
 }
+
 
 
 
