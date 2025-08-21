@@ -30,7 +30,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-               bat """
+              sh """
                   docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
                 """
             }
@@ -39,7 +39,7 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USR', passwordVariable: 'DOCKERHUB_PSW')]) {
-                    bat """
+                    sh """
                       echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin
                       docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
                       docker push ${DOCKER_IMAGE}:latest
@@ -51,7 +51,7 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 withCredentials([file(credentialsId: 'ec2-key', variable: 'EC2_PEM')]) {
-                    bat """
+                    sh """
                       chmod 400 $EC2_PEM
                       scp -o StrictHostKeyChecking=no -i $EC2_PEM deploy.sh ${params.EC2_USER}@${params.EC2_HOST}:/tmp/deploy.sh
                       ssh -o StrictHostKeyChecking=no -i $EC2_PEM ${params.EC2_USER}@${params.EC2_HOST} "chmod +x /tmp/deploy.sh && DOCKER_IMAGE='${DOCKER_IMAGE}' APP_NAME='${params.APP_NAME}' HOST_PORT='${params.HOST_PORT}' CONTAINER_PORT='${params.CONTAINER_PORT}' /tmp/deploy.sh '${params.BUILD_NUMBER}'"
@@ -63,7 +63,7 @@ pipeline {
         stage('Backup Logs to S3') {
             steps {
                 withCredentials([file(credentialsId: 'ec2-key', variable: 'EC2_PEM')]) {
-                    bat """
+                    sh """
                       scp -o StrictHostKeyChecking=no -i $EC2_PEM backup_logs.sh ${params.EC2_USER}@${params.EC2_HOST}:/tmp/backup_logs.sh
                       ssh -o StrictHostKeyChecking=no -i $EC2_PEM ${params.EC2_USER}@${params.EC2_HOST} "chmod +x /tmp/backup_logs.sh && AWS_REGION='${params.AWS_REGION}' S3_BUCKET='${params.S3_BUCKET}' APP_NAME='${params.APP_NAME}' /tmp/backup_logs.sh"
                     """
@@ -78,6 +78,7 @@ pipeline {
         }
     }
 }
+
 
 
 
