@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'DOCKERHUB_REPO', defaultValue: 'yourdockerhubuser/final-devops-app', description: 'DockerHub repo')
+        string(name: 'DOCKERHUB_REPO', defaultValue: 'fizza424/dockerhub_repo', description: 'DockerHub repo')
         string(name: 'APP_NAME', defaultValue: 'final-devops-app', description: 'Container name')
-        string(name: 'EC2_HOST', defaultValue: 'ec2-xx-xx-xx-xx.ap-south-1.compute.amazonaws.com', description: 'EC2 Public DNS')
+        string(name: 'EC2_HOST', defaultValue: 'ec2-65-0-83-45.ap-south-1.compute.amazonaws.com', description: 'EC2 Public DNS')
         string(name: 'EC2_USER', defaultValue: 'ec2-user', description: 'EC2 username')
         string(name: 'HOST_PORT', defaultValue: '80', description: 'Port exposed on EC2')
         string(name: 'CONTAINER_PORT', defaultValue: '3000', description: 'App port inside container')
         string(name: 'AWS_REGION', defaultValue: 'ap-south-1', description: 'AWS Region')
-        string(name: 'S3_BUCKET', defaultValue: 'your-s3-bucket-name', description: 'S3 bucket for logs backup')
+        string(name: 'S3_BUCKET', defaultValue: 'fizza-devops-logs', description: 'S3 bucket for logs backup')
     }
 
     environment {
@@ -78,6 +78,7 @@ pipeline {
         }
     }
 }
+
 
 
 
