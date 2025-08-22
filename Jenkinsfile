@@ -19,7 +19,7 @@ pipeline {
 
         stage('Build Docker') {
             steps {
-                sh """
+                bat """
                     docker build -t ${DOCKER_IMAGE}:latest .
                 """
             }
@@ -28,7 +28,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
+                   bat """
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push ${DOCKER_IMAGE}:latest
                     """
@@ -38,7 +38,7 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sh """
+               bat """
                     ssh -o StrictHostKeyChecking=no -i ${PEM_KEY} ${EC2_HOST} "
                         docker pull ${DOCKER_IMAGE}:latest &&
                         docker stop app || true &&
@@ -52,7 +52,7 @@ pipeline {
         stage('Backup Logs to S3') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh """
+                   bat """
                         ssh -o StrictHostKeyChecking=no -i ${PEM_KEY} ${EC2_HOST} "docker logs app > app.log"
                         scp -o StrictHostKeyChecking=no -i ${PEM_KEY} ${EC2_HOST}:app.log .
                         
@@ -75,6 +75,7 @@ pipeline {
         }
     }
 }
+
 
 
 
