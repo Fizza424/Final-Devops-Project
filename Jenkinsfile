@@ -22,6 +22,13 @@ pipeline {
             }
         }
 
+        stage('Set Docker Context') {
+    steps {
+        bat 'docker context use desktop-linux'
+    }
+}
+
+
         stage('Push to Docker Hub') {
             steps {
                 withDockerRegistry([ credentialsId: 'docker-hub-creds', url: '' ]) {
@@ -62,6 +69,7 @@ pipeline {
         }
     }
 }
+
 
 
 
