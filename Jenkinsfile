@@ -1,48 +1,35 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'DOCKERHUB_REPO', defaultValue: 'fizza424/dockerhub_repo', description: 'DockerHub repo')
-        string(name: 'APP_NAME', defaultValue: 'final-devops-app', description: 'Container name')
-        string(name: 'EC2_HOST', defaultValue: 'ec2-65-0-83-45.ap-south-1.compute.amazonaws.com', description: 'EC2 Public DNS')
-        string(name: 'EC2_USER', defaultValue: 'ec2-user', description: 'EC2 username')
-        string(name: 'HOST_PORT', defaultValue: '80', description: 'Port exposed on EC2')
-        string(name: 'CONTAINER_PORT', defaultValue: '3000', description: 'App port inside container')
-        string(name: 'AWS_REGION', defaultValue: 'ap-south-1', description: 'AWS Region')
-        string(name: 'S3_BUCKET', defaultValue: 'fizza-devops-logs', description: 'S3 bucket for logs backup')
-    }
-
     environment {
-        DOCKER_IMAGE = "${params.DOCKERHUB_REPO}"
-    }
-
-    options {
-        disableConcurrentBuilds()
-        timestamps()
+        DOCKER_IMAGE = "fizza424/devops-demo"
+        EC2_HOST     = "ec2-user@65.0.83.45"
+        S3_BUCKET    = "fizza-devops-logs"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                checkout scm
+                git 'https://github.com/Fizza424/Final-Project.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker') {
             steps {
-              sh """
-                  docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
-                """
+                script {
+                    docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}", 'app')
+                }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USR', passwordVariable: 'DOCKERHUB_PSW')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
-                      echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin
-                      docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                      docker push ${DOCKER_IMAGE}:latest
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                    docker push ${DOCKER_IMAGE}:latest
                     """
                 }
             }
@@ -50,11 +37,14 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([file(credentialsId: 'ec2-key', variable: 'EC2_PEM')]) {
+                sshagent(['ec2-key']) {
                     sh """
-                      chmod 400 $EC2_PEM
-                      scp -o StrictHostKeyChecking=no -i $EC2_PEM deploy.sh ${params.EC2_USER}@${params.EC2_HOST}:/tmp/deploy.sh
-                      ssh -o StrictHostKeyChecking=no -i $EC2_PEM ${params.EC2_USER}@${params.EC2_HOST} "chmod +x /tmp/deploy.sh && DOCKER_IMAGE='${DOCKER_IMAGE}' APP_NAME='${params.APP_NAME}' HOST_PORT='${params.HOST_PORT}' CONTAINER_PORT='${params.CONTAINER_PORT}' /tmp/deploy.sh '${params.BUILD_NUMBER}'"
+                    ssh -o StrictHostKeyChecking=no $EC2_HOST '
+                        docker pull ${DOCKER_IMAGE}:latest &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        docker run -d -p 80:3000 --name app ${DOCKER_IMAGE}:latest
+                    '
                     """
                 }
             }
@@ -62,22 +52,19 @@ pipeline {
 
         stage('Backup Logs to S3') {
             steps {
-                withCredentials([file(credentialsId: 'ec2-key', variable: 'EC2_PEM')]) {
+                sshagent(['ec2-key']) {
                     sh """
-                      scp -o StrictHostKeyChecking=no -i $EC2_PEM backup_logs.sh ${params.EC2_USER}@${params.EC2_HOST}:/tmp/backup_logs.sh
-                      ssh -o StrictHostKeyChecking=no -i $EC2_PEM ${params.EC2_USER}@${params.EC2_HOST} "chmod +x /tmp/backup_logs.sh && AWS_REGION='${params.AWS_REGION}' S3_BUCKET='${params.S3_BUCKET}' APP_NAME='${params.APP_NAME}' /tmp/backup_logs.sh"
+                    ssh -o StrictHostKeyChecking=no $EC2_HOST '
+                        docker logs app > app.log &&
+                        aws s3 cp app.log s3://${S3_BUCKET}/app-\$(date +%F-%H-%M-%S).log
+                    '
                     """
                 }
             }
         }
     }
-
-    post {
-        always {
-            cleanWs()
-        }
-    }
 }
+
 
 
 
