@@ -1,16 +1,20 @@
+# Use Node.js LTS (lightweight Alpine version)
 FROM node:18-alpine
+
+# Set working directory inside container
 WORKDIR /usr/src/app
 
-# Copy dependency files first (better caching)
+# Copy package.json and package-lock.json first (better caching)
 COPY package*.json ./
 
-# Install only production deps using lockfile
+# Install only production dependencies
 RUN npm ci --omit=dev
 
-# Copy the rest of your source code
+# Copy the rest of your app
 COPY . .
 
-ENV PORT=3000
+# Expose the port your app runs on
 EXPOSE 3000
 
+# Start the app
 CMD ["node", "server.js"]
