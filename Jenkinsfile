@@ -22,12 +22,12 @@ pipeline {
             }
         }
 
-        stage('Set Docker Context') {
+      /*  stage('Set Docker Context') {
     steps {
         bat 'docker context use desktop-linux'
     }
 }
-
+*/
 
         stage('Push to Docker Hub') {
             steps {
@@ -69,6 +69,7 @@ pipeline {
         }
     }
 }
+
 
 
 
