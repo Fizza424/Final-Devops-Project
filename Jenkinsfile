@@ -2,9 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "fizza424/final-project"
-        AWS_DEFAULT_REGION = "ap-south-1" // change if your bucket is in another region
-        S3_BUCKET = "fizza-devops-logs" // change to your bucket name
+        IMAGE_NAME = "fizza424/Final-Devops-Project"
+        IMAGE_TAG  = "latest"
+        AWS_REGION = "ap-south-1"   // change if your EC2/S3 is in a different region
+        EC2_HOST   = "ec2-user@65.0.83.45"
+        KEY_PATH   = "C:/Users/HP/Downloads/fizza-ec2-key.pem"   // update path to your .pem key
+        S3_BUCKET  = "fizza-devops-log"   // change to your S3 bucket
     }
 
     stages {
@@ -16,59 +19,55 @@ pipeline {
 
         stage('Build Docker image') {
             steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
-                }
+                bat """
+                    docker build -t %IMAGE_NAME%:%IMAGE_TAG% .
+                """
             }
         }
 
-      /*  stage('Set Docker Context') {
-    steps {
-        bat 'docker context use desktop-linux'
-    }
-}
-*/
-
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([ credentialsId: 'docker-hub-creds', url: '' ]) {
-                    script {
-                        dockerImage.push("latest")
-                    }
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    bat """
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push %IMAGE_NAME%:%IMAGE_TAG%
+                    """
                 }
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                sshagent (credentials: ['ec2-ssh-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@65.0.83.45 '
-                          docker pull ${DOCKER_IMAGE}:latest &&
-                          docker stop final-project || true &&
-                          docker rm final-project || true &&
-                          docker run -d --name final-project -p 80:3000 ${DOCKER_IMAGE}:latest
-                        '
-                    '''
-                }
+                bat """
+                    scp -i "%KEY_PATH%" docker-compose.yml %EC2_HOST%:/home/ec2-user/
+                    ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker compose -f docker-compose.yml up -d"
+                """
             }
         }
 
         stage('Backup logs to S3') {
             steps {
-                sshagent (credentials: ['ec2-ssh-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@65.0.83.45 '
-                          tar -czf /tmp/app-logs.tar.gz /usr/src/app/logs || true
-                        '
-                        scp -o StrictHostKeyChecking=no ec2-user@65.0.83.45:/tmp/app-logs.tar.gz .
-                        aws s3 cp app-logs.tar.gz s3://${S3_BUCKET}/logs/$(date +%F-%H-%M-%S)-app-logs.tar.gz
-                    '''
+                withCredentials([aws(credentialsId: 'aws-creds', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    bat """
+                        aws s3 cp C:/ProgramData/Jenkins/.jenkins/logs/ s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
+                    """
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check the logs."
+        }
+    }
 }
+
 
 
 
