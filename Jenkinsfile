@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "fizza424/Final-Devops-Project"
+        IMAGE_NAME = "fizza424/final-project"
         IMAGE_TAG  = "latest"
         AWS_REGION = "ap-south-1"   // change if your EC2/S3 is in a different region
         EC2_HOST   = "ec2-user@65.0.83.45"
@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Fizza424/Final-Project.git'
+                git branch: 'main', url: 'https://github.com/Fizza424/Final-Devops-Project.git'
             }
         }
 
@@ -67,6 +67,7 @@ pipeline {
         }
     }
 }
+
 
 
 
