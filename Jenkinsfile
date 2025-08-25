@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "fizza424/final-devops-project"   // must be all lowercase
+        IMAGE_NAME = "fizza424/final-project"
         IMAGE_TAG  = "latest"
-        AWS_REGION = "ap-south-1"   // change if your EC2/S3 is in a different region
-        EC2_HOST   = "ec2-user@65.0.83.45"
-        KEY_PATH   = "C:/Users/HP/Downloads/fizza-ec2-key.pem"   // update path to your .pem key
-        S3_BUCKET  = "fizza-devops-log"   // change to your S3 bucket
+        AWS_REGION = "ap-south-1"
+        EC2_HOST   = "ec2-user@65.2.78.12"   // ✅ updated new EC2 IP
+        KEY_PATH   = "C:/Users/HP/Downloads/fizza-ec2-key.pem"
+        S3_BUCKET  = "fizza-devops-log"
     }
 
     stages {
