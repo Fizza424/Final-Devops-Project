@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy the rest of your app
 COPY . .
@@ -18,3 +18,4 @@ EXPOSE 3000
 
 # Start the app
 CMD ["node", "server.js"]
+
