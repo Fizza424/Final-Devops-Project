@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  app:
+    image: fizza424/final-project:latest   # this matches what your Jenkinsfile pushes
+    container_name: final_project_app
+    ports:
+      - "3000:3000"    # maps EC2 port 3000 → container port 3000
+    restart: always
