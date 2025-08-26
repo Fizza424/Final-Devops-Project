@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "fizza424/final-project"
         IMAGE_TAG  = "latest"
         AWS_REGION = "ap-south-1"
-        EC2_HOST   = "ec2-user@65.2.78.12"   // ✅ updated new EC2 IP
+        EC2_HOST   = "ec2-user@65.2.78.12"   // ✅ updated EC2 IP
         KEY_PATH   = "C:/Users/HP/Downloads/fizza-ec2-key.pem"
         S3_BUCKET  = "fizza-devops-log"
     }
@@ -48,22 +48,14 @@ pipeline {
         }
 
         stage('Backup logs to S3') {
-    steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-creds',
-            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-        ]]) {
-            bat """
-                set AWS_REGION=%AWS_REGION%
-                aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
-            """
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    bat """
+                        aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive
+                    """
+                }
+            }
         }
-    }
-}
-
-
     }
 
     post {
@@ -75,8 +67,6 @@ pipeline {
         }
     }
 }
-
-
 
 
 
