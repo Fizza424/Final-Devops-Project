@@ -49,19 +49,18 @@ pipeline {
         }
 
         stage('Backup logs to S3') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-creds',
-                                                  usernameVariable: 'AWS_ACCESS_KEY_ID',
-                                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    bat """
-                        aws configure set aws_access_key_id %AWS_ACCESS_KEY_ID%
-                        aws configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY%
-                        aws configure set region %AWS_REGION%
-                        aws s3 cp C:/ProgramData/Jenkins/.jenkins/logs/ s3://%S3_BUCKET%/ --recursive
-                    """
-                }
-            }
+    steps {
+        withCredentials([aws(credentialsId: 'aws-creds', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            bat """
+                set AWS_REGION=%AWS_REGION%
+                set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
+                set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
+                aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
+            """
         }
+    }
+}
+
     }
 
     post {
@@ -73,6 +72,7 @@ pipeline {
         }
     }
 }
+
 
 
 
