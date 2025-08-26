@@ -38,17 +38,16 @@ pipeline {
             }
         }
 
-                stage('Deploy to EC2') {
+        stage('Deploy to EC2') {
             steps {
                 bat """
                     scp -i "%KEY_PATH%" docker-compose.yml %EC2_HOST%:/home/ec2-user/
-                    ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker-compose -f docker-compose.yml up -d"
+                    ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker compose -f docker-compose.yml up -d"
                 """
             }
         }
 
-
-               stage('Backup logs to S3') {
+        stage('Backup logs to S3') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws-creds',
                                                   usernameVariable: 'AWS_ACCESS_KEY_ID',
@@ -62,8 +61,6 @@ pipeline {
                 }
             }
         }
-
-        }
     }
 
     post {
@@ -75,8 +72,6 @@ pipeline {
         }
     }
 }
-
-
 
 
 
