@@ -48,19 +48,17 @@ pipeline {
         }
 
         stage('Backup logs to S3') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-creds',
-                                                  usernameVariable: 'AWS_ACCESS_KEY_ID',
-                                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    bat """
-                        set AWS_REGION=%AWS_REGION%
-                        set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
-                        set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
-                        aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
-                    """
-                }
-            }
+    steps {
+        sshagent(['ec2-ssh-key']) {
+            sh """
+                ssh -o StrictHostKeyChecking=no ec2-user@65.2.78.12 \
+                "AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID% AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY% AWS_REGION=%AWS_REGION% \
+                aws s3 cp /var/lib/docker/containers/ s3://%S3_BUCKET%/ --recursive"
+            """
         }
+    }
+}
+
     }
 
     post {
@@ -72,6 +70,7 @@ pipeline {
         }
     }
 }
+
 
 
 
