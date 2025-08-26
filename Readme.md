@@ -1,32 +1,70 @@
-# DevOps Demo: Node.js → Docker → Jenkins (Windows) → EC2 → S3
+DevOps Demo: Node.js → Docker → Jenkins (Windows) → EC2 → S3
 
-This repo supports a live demo pipeline:
-- Build a Docker image on Jenkins (Windows + Docker Desktop)
-- Push to Docker Hub
-- SSH deploy to EC2 (Amazon Linux) and run the container on port 80
-- Backup container logs to Amazon S3
+This repository powers a live demonstration pipeline that showcases modern DevOps practices through the following steps:
 
-## Prerequisites
-- **Docker Hub** account (public repo recommended for simplicity)
-- **AWS**: EC2 key pair (.pem), Security Group allowing 22 (SSH) + 80 (HTTP), S3 bucket for logs
-- **EC2**: Amazon Linux 2023 t2.micro is fine
-- **IAM**: an Instance Role attached to EC2 with S3 write permissions
-- **Jenkins on Windows** with: Git, Pipeline, Credentials Binding plugins, OpenSSH client, Docker Desktop (Linux containers)
+Docker Build
+A Docker image is built on Jenkins running on Windows (using Docker Desktop, with Linux containers enabled).
 
-## Jenkins credentials (create before first run)
-- `dockerhub-creds` – Username/Password for Docker Hub
-- `ec2-key` – Secret file: upload your `.pem` EC2 key
+Push to Docker Hub
+The built image is pushed to Docker Hub for distributed access and deployment.
 
-## Configure job parameters (per environment)
-- `DOCKERHUB_REPO` = `your-dockerhub-username/docker-devops-demo`
-- `EC2_HOST` = EC2 public DNS (e.g. `ec2-3-120-...compute.amazonaws.com`)
-- `S3_BUCKET` = your logs bucket (e.g. `fizza-devops-logs`)
-- `AWS_REGION` = e.g. `ap-south-1`
-- Others as needed
+Deploy via SSH
+The image is pulled and the container is launched on an Amazon EC2 instance (Amazon Linux), accessible on port 80 for testing.
 
-## Run locally (optional)
-```bash
-cd app
-npm ci
-npm start
-# open http://localhost:3000/health
+Log Backups to S3
+Container logs are backed up automatically to an Amazon S3 bucket for persistence and auditing.
+
+Prerequisites
+
+You’ll need:
+
+Docker Hub
+A Docker Hub account (public repository recommended for simplicity).
+
+AWS Infrastructure
+
+An EC2 key pair (.pem) for SSH access.
+
+A Security Group allowing traffic on ports 22 (SSH) and 80 (HTTP).
+
+An S3 bucket for storing logs.
+
+EC2 instance (e.g., Amazon Linux 2023, t2.micro should work fine).
+
+IAM Role attached to the EC2 instance with permissions to write to S3. 
+GitHub
+
+Jenkins on Windows
+Setup with the following plugins and tools:
+
+Git
+
+Pipeline
+
+Credentials Binding
+
+OpenSSH client
+
+Docker Desktop (configured for Linux containers) 
+GitHub
+
+Jenkins Configuration & Job Parameters
+
+Before running your pipeline, create the following credentials in Jenkins:
+
+dockerhub-creds – for your Docker Hub username and password
+
+ec2-key – your EC2 .pem key as a “Secret file” 
+GitHub
+
+Within the Jenkins job, configure these environment parameters as needed per environment:
+
+DOCKERHUB_REPO (e.g., your-dockerhub-username/docker-devops-demo)
+
+EC2_HOST (e.g., ec2-3-120-...compute.amazonaws.com)
+
+S3_BUCKET (e.g., fizza-devops-logs)
+
+AWS_REGION (e.g., ap-south-1)
+
+Additional parameters as required for your environment
