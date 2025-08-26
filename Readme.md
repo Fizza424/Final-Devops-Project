@@ -669,5 +669,7 @@ upload: ..\..\logs\tasks\Fingerprint cleanup.log.2 to s3://fizza-devops-log/task
 [Pipeline] // node
 [Pipeline] End of Pipeline
 Finished: SUCCESS
+http://65.2.78.12:3000 its where the web app is running.
+
 
 
