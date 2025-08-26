@@ -43,24 +43,24 @@ pipeline {
                 bat """
                     scp -i "%KEY_PATH%" docker-compose.yml %EC2_HOST%:/home/ec2-user/
                     ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker-compose -f docker-compose.yml up -d"
-
                 """
             }
         }
 
         stage('Backup logs to S3') {
-    steps {
-        withCredentials([aws(credentialsId: 'aws-creds', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-            bat """
-                set AWS_REGION=%AWS_REGION%
-                set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
-                set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
-                aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
-            """
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-creds',
+                                                  usernameVariable: 'AWS_ACCESS_KEY_ID',
+                                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    bat """
+                        set AWS_REGION=%AWS_REGION%
+                        set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
+                        set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
+                        aws s3 cp "C:/ProgramData/Jenkins/.jenkins/logs/" s3://%S3_BUCKET%/ --recursive --region %AWS_REGION%
+                    """
+                }
+            }
         }
-    }
-}
-
     }
 
     post {
@@ -72,8 +72,6 @@ pipeline {
         }
     }
 }
-
-
 
 
 
