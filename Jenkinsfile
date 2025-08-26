@@ -42,7 +42,8 @@ pipeline {
             steps {
                 bat """
                     scp -i "%KEY_PATH%" docker-compose.yml %EC2_HOST%:/home/ec2-user/
-                    ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker compose -f docker-compose.yml up -d"
+                    ssh -i "%KEY_PATH%" %EC2_HOST% "docker pull %IMAGE_NAME%:%IMAGE_TAG% && docker-compose -f docker-compose.yml up -d"
+
                 """
             }
         }
@@ -72,6 +73,7 @@ pipeline {
         }
     }
 }
+
 
 
 
